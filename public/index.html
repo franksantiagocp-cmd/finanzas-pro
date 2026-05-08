@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lana. — Finanzas personales</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── Identidad lana. ── */
+  --carbon:#1A1916;
+  --lima:#C9F542;
+  --lima-dim:#A8CC1A;
+
+  /* Fondos — modo claro por defecto */
+  --bg0:#F8F7F4; --bg1:#FFFFFF; --bg2:#F0EEE9; --bg3:#E8E6E0; --bg4:#DDDBD4;
+  --text1:#1A1916; --text2:#6B6A65; --text3:#9E9D99;
+  --border:rgba(0,0,0,.09); --border2:rgba(0,0,0,.15);
+
+  /* Acento lana. */
+  --gold:var(--carbon); --gold2:var(--carbon); --goldbg:rgba(201,245,66,.15);
+  --green:#3B6D11; --greenbg:#EAF3DE;
+  --red:#A32D2D; --redbg:#FCEBEB;
+  --blue:#185FA5; --bluebg:#E6F1FB;
+  --purple:#534AB7; --purplebg:#EEEDFE;
+  --teal:#0F6E56; --tealbg:#E1F5EE;
+  --orange:#854F0B; --orangebg:#FAEEDA;
+
+  /* Subcuentas con paleta lana. */
+  --ahorro-c:#3B6D11;   --ahorro-bg:#EAF3DE;
+  --personal-c:#185FA5; --personal-bg:#E6F1FB;
+  --matrimonio-c:#993556; --matrimonio-bg:#FBEAF0;
+  --hijos-c:#854F0B;    --hijos-bg:#FAEEDA;
+  --deudas-c:#A32D2D;   --deudas-bg:#FCEBEB;
+
+  --radius:10px; --radius-sm:6px; --radius-lg:16px;
+  --font:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);
+}
+/* Modo oscuro opcional — activado con clase .dark */
+html.dark {
+  --bg0:#111110; --bg1:#1C1C1A; --bg2:#252523; --bg3:#2E2E2B; --bg4:#383835;
+  --text1:#F0EEE9; --text2:#A8A79F; --text3:#6B6A65;
+  --border:rgba(255,255,255,.08); --border2:rgba(255,255,255,.14);
+  --goldbg:rgba(201,245,66,.12);
+  --green:#5DCAA5; --greenbg:#0A2E22;
+  --ahorro-bg:#0A2E22; --personal-bg:#0A1929;
+  --matrimonio-bg:#2A0F1A; --hijos-bg:#2A1E08; --deudas-bg:#2A1111;
+  --shadow:0 2px 12px rgba(0,0,0,.4); --shadow-sm:0 1px 4px rgba(0,0,0,.3);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--font);background:var(--bg0);color:var(--text1);font-size:14px;transition:background .2s,color .2s}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
+
+/* ═══ SPLASH ════════════════════════════════════════════════════════════════ */
+#splash {
+  position:fixed;inset:0;background:var(--bg0);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:1000;
+  transition:opacity .5s,transform .5s;
+}
+#splash.out{opacity:0;transform:scale(.97);pointer-events:none}
+.splash-glow{display:none}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.splash-logo-mark{width:72px;height:72px;border-radius:20px;background:var(--carbon);display:flex;align-items:center;justify-content:center;margin-bottom:16px;animation:floatIn .6s ease both}
+.splash-logo-dot{width:28px;height:28px;border-radius:50%;background:var(--lima)}
+.splash-logo{font-size:0;margin-bottom:0;animation:none}
+.splash-name{font-size:36px;font-weight:500;letter-spacing:-.5px;animation:floatIn .6s .1s ease both}
+.splash-name span{color:var(--lima)}
+.splash-sub{font-size:14px;color:var(--text2);margin-top:6px;animation:floatIn .6s .2s ease both}
+.splash-bar{width:160px;height:3px;background:var(--bg3);border-radius:2px;margin-top:36px;overflow:hidden;animation:floatIn .6s .3s ease both}
+.splash-fill{height:100%;background:var(--carbon);border-radius:2px;width:0%;animation:loadBar 1.6s .4s ease forwards}
+@keyframes loadBar{to{width:100%}}
+@keyframes floatIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ LAYOUT ════════════════════════════════════════════════════════════════ */
+#app{display:flex;height:100vh;opacity:0;transition:opacity .4s}
+#app.visible{opacity:1}
+
+/* ═══ SIDEBAR ═══════════════════════════════════════════════════════════════ */
+.sidebar{
+  width:240px;background:var(--carbon);border-right:none;
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;
+}
+.sb-brand{padding:22px 18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-icon{font-size:22px;display:none}
+.sb-logo-mark{width:32px;height:32px;border-radius:9px;background:var(--lima);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-logo-dot{width:12px;height:12px;border-radius:50%;background:var(--carbon)}
+.sb-brandname{font-size:16px;font-weight:500;letter-spacing:-.3px;color:#fff}
+.sb-brandname span{color:var(--lima)}
+.sb-section{padding:14px 12px 6px}
+.sb-label{font-size:10px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.28);padding:0 8px;margin-bottom:4px}
+.sb-btn{
+  display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;
+  border-radius:var(--radius-sm);border:none;background:transparent;
+  color:rgba(255,255,255,.5);font-size:13px;font-family:var(--font);
+  cursor:pointer;text-align:left;transition:all .15s;
+}
+.sb-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.sb-btn.active{background:var(--lima);color:var(--carbon);font-weight:500}
+.sb-btn-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.sb-divider{border:none;border-top:1px solid rgba(255,255,255,.08);margin:6px 12px}
+.sb-bottom{padding:12px;margin-top:auto}
+.theme-toggle{
+  display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;
+  border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);font-size:13px;
+  font-family:var(--font);cursor:pointer;transition:all .15s;
+}
+.theme-toggle:hover{background:rgba(255,255,255,.1);color:#fff}
+
+/* ═══ MAIN ══════════════════════════════════════════════════════════════════ */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{
+  background:var(--bg1);border-bottom:1px solid var(--border);
+  padding:0 28px;display:flex;align-items:center;gap:16px;
+  height:54px;flex-shrink:0;
+}
+.topbar-title{font-size:15px;font-weight:500;letter-spacing:-.2px}
+.topbar-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.mes-selector{
+  display:flex;align-items:center;gap:8px;padding:6px 14px;
+  border-radius:var(--radius-sm);border:1px solid var(--border2);
+  background:var(--bg2);color:var(--text1);font-family:var(--font);font-size:13px;cursor:pointer;
+}
+.content{flex:1;overflow-y:auto;padding:28px}
+.page{display:none}
+.page.active{display:block;animation:pageIn .2s ease}
+@keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ CARDS ═════════════════════════════════════════════════════════════════ */
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:14px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{font-size:14px;font-weight:500}
+.card-sub{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* ═══ MÉTRICAS DASHBOARD ═══════════════════════════════════════════════════ */
+.dash-hero{
+  background:var(--carbon);
+  border:none;border-radius:var(--radius-lg);
+  padding:26px 28px;margin-bottom:18px;position:relative;overflow:hidden;
+}
+.dash-hero::before{content:'';display:none}
+.dash-greeting{font-size:12px;color:rgba(255,255,255,.45);margin-bottom:5px}
+.dash-total{font-size:36px;font-weight:500;letter-spacing:-.5px;color:var(--lima)}
+.dash-total-label{font-size:12px;color:rgba(255,255,255,.4);margin-top:4px}
+.dash-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pill{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7)}
+.pill-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+.subcuentas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.sc-card{
+  border-radius:var(--radius);padding:18px 20px;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden;border:1px solid var(--border);
+}
+.sc-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.1);border-color:var(--carbon)!important}
+.sc-card::after{content:attr(data-emoji);position:absolute;right:14px;bottom:10px;font-size:32px;opacity:.18}
+.sc-card.ahorro{background:var(--ahorro-bg);border-color:var(--ahorro-c)22}
+.sc-card.personal{background:var(--personal-bg);border-color:var(--personal-c)22}
+.sc-card.matrimonio{background:var(--matrimonio-bg);border-color:var(--matrimonio-c)22}
+.sc-card.hijos{background:var(--hijos-bg);border-color:var(--hijos-c)22}
+.sc-card.deudas{background:var(--deudas-bg);border-color:var(--deudas-c)22}
+.sc-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.sc-label.ahorro{color:var(--ahorro-c)}
+.sc-label.personal{color:var(--personal-c)}
+.sc-label.matrimonio{color:var(--matrimonio-c)}
+.sc-label.hijos{color:var(--hijos-c)}
+.sc-label.deudas{color:var(--deudas-c)}
+.sc-saldo{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.sc-detail{font-size:11px;color:var(--text2);margin-top:6px}
+.sc-bar{height:4px;background:var(--bg3);border-radius:2px;margin-top:12px;overflow:hidden}
+.sc-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.sc-fill.ahorro{background:var(--ahorro-c)}
+.sc-fill.personal{background:var(--personal-c)}
+.sc-fill.matrimonio{background:var(--matrimonio-c)}
+.sc-fill.hijos{background:var(--hijos-c)}
+.sc-fill.deudas{background:var(--deudas-c)}
+
+/* ═══ DISTRIBUCIÓN ══════════════════════════════════════════════════════════ */
+.dist-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.dist-row:last-child{border-bottom:none}
+.dist-icon{font-size:18px;width:28px;text-align:center}
+.dist-label{font-size:13px;font-weight:500;flex:1}
+.dist-sub{font-size:11px;color:var(--text2)}
+.dist-val{font-family:var(--mono);font-size:13px;font-weight:500;text-align:right;min-width:90px}
+.dist-badge{font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:600}
+.badge-green{background:var(--greenbg);color:var(--green)}
+.badge-red{background:var(--redbg);color:var(--red)}
+.badge-blue{background:var(--bluebg);color:var(--blue)}
+.badge-gold{background:var(--goldbg);color:var(--gold)}
+
+/* ═══ TABLA ═════════════════════════════════════════════════════════════════ */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);padding:8px 12px;white-space:nowrap}
+td{padding:12px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .1s}
+tbody tr:hover td{background:var(--bg2)}
+.td-mono{font-family:var(--mono);font-size:12px}
+.td-emoji{font-size:16px}
+
+/* ═══ GRÁFICO DE BARRAS ═════════════════════════════════════════════════════ */
+.chart-container{padding:8px 0}
+.chart-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.chart-label{font-size:12px;width:120px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chart-bar-wrap{flex:1;height:26px;background:var(--bg3);border-radius:6px;overflow:hidden;position:relative}
+.chart-bar{height:100%;border-radius:6px;transition:width .8s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;padding-left:10px}
+.chart-bar-label{font-size:11px;font-weight:600;color:#fff;white-space:nowrap}
+.chart-val{font-family:var(--mono);font-size:12px;width:90px;text-align:right;flex-shrink:0}
+
+/* ═══ BOTONES ═══════════════════════════════════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg2);color:var(--text1);font-size:13px;font-family:var(--font);cursor:pointer;transition:all .15s;font-weight:500}
+.btn:hover{background:var(--bg3)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--gold);border-color:var(--gold);color:#0D0F14;font-weight:600}
+.btn-primary:hover{background:var(--gold2);border-color:var(--gold2)}
+.btn-danger{background:var(--redbg);border-color:var(--red)33;color:var(--red)}
+.btn-danger:hover{background:var(--red)22}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-icon{padding:7px 10px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns-end{justify-content:flex-end}
+
+/* ═══ MODAL ═════════════════════════════════════════════════════════════════ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg1);border-radius:var(--radius-lg);border:1px solid var(--border2);padding:30px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;transform:translateY(16px) scale(.98);transition:all .2s;box-shadow:var(--shadow)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:22px;letter-spacing:-.01em}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+
+/* ═══ FORMULARIOS ═══════════════════════════════════════════════════════════ */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid .span2{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.04em;text-transform:uppercase}
+.field input,.field select,.field textarea{
+  font-size:13px;padding:10px 13px;border-radius:var(--radius-sm);
+  border:1px solid var(--border2);background:var(--bg2);color:var(--text1);
+  font-family:var(--font);width:100%;transition:border .15s;
+}
+.field input:focus,.field select,.field textarea:focus{outline:none;border-color:var(--gold)88}
+.field select option{background:var(--bg2)}
+.field textarea{resize:vertical;min-height:72px}
+.field-hint{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ═══ TOAST ═════════════════════════════════════════════════════════════════ */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:12px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;max-width:320px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:var(--green);color:#0D0F14}
+.toast.error{background:var(--red);color:#fff}
+
+/* ═══ MISC ══════════════════════════════════════════════════════════════════ */
+.empty{text-align:center;padding:48px;color:var(--text3);font-size:14px}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sep{border:none;border-top:1px solid var(--border);margin:20px 0}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.ingreso-badge{background:var(--greenbg);color:var(--green)}
+.gasto-badge{background:var(--redbg);color:var(--red)}
+
+@media(max-width:680px){.sidebar{display:none}.content{padding:16px}.subcuentas-grid{grid-template-columns:1fr 1fr}}
+@media print{.sidebar,.topbar,.btns{display:none!important}.content{padding:0}}
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH ════════════════════════════════════════════════════════════════ -->
+<div id="splash">
+  <div class="splash-glow"></div>
+  <div class="splash-logo">💎</div>
+  <div class="splash-name">Frank <span>Santiago</span></div>
+  <div class="splash-sub">Sistema de Finanzas Personales</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+
+<!-- ══ APP ═══════════════════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-icon">💎</div>
+      <div class="sb-brandname">Frank <span>Finance</span></div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">General</div>
+      <button class="sb-btn active" data-page="dashboard"><span class="sb-btn-icon">🏠</span>Dashboard</button>
+      <button class="sb-btn" data-page="ingresos"><span class="sb-btn-icon">📥</span>Ingresos</button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Subcuentas</div>
+      <button class="sb-btn" data-page="sc-ahorro"><span class="sb-btn-icon">💰</span>Ahorro</button>
+      <button class="sb-btn" data-page="sc-personal"><span class="sb-btn-icon">👤</span>Personal</button>
+      <button class="sb-btn" data-page="sc-matrimonio"><span class="sb-btn-icon">💑</span>Matrimonio</button>
+      <button class="sb-btn" data-page="sc-hijos"><span class="sb-btn-icon">👨‍👧‍👦</span>Hijos</button>
+      <button class="sb-btn" data-page="sc-deudas"><span class="sb-btn-icon">💳</span>Deudas</button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Configuración</div>
+      <button class="sb-btn" data-page="categorias"><span class="sb-btn-icon">🏷️</span>Categorías</button>
+      <button class="sb-btn" data-page="ajustes"><span class="sb-btn-icon">⚙️</span>Ajustes</button>
+    </div>
+
+    <div class="sb-bottom">
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span><span id="theme-label">Modo claro</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-sub" id="topbar-sub">Resumen general</div>
+      </div>
+      <div class="topbar-right">
+        <select class="mes-selector" id="sel-mes" onchange="cambiarMes()">
+          <option value="">Todo el historial</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══ DASHBOARD ════════════════════════════════════════════════════ -->
+      <div class="page active" id="page-dashboard">
+
+        <div class="dash-hero" id="dash-hero">
+          <div class="dash-greeting">Bienvenido, <strong>Frank</strong> 👋</div>
+          <div class="dash-total" id="dash-total-val">$0.00</div>
+          <div class="dash-total-label">Total ingresado en el periodo</div>
+          <div class="dash-pills" id="dash-pills"></div>
+        </div>
+
+        <div class="subcuentas-grid" id="subcuentas-grid"></div>
+
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Distribución de ingresos</div><div class="card-sub">Cómo se reparten tus recursos</div></div>
+          </div>
+          <div id="dist-body"></div>
+        </div>
+
+      </div>
+
+      <!-- ═══ INGRESOS ═════════════════════════════════════════════════════ -->
+      <div class="page" id="page-ingresos">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Ingresos</div><div class="card-sub">Todos los ingresos registrados</div></div>
+            <button class="btn btn-primary btn-sm" onclick="abrirNuevoIngreso()">＋ Nuevo ingreso</button>
+          </div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Monto</th><th>Distribución</th><th></th></tr></thead>
+            <tbody id="tbl-ingresos"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══ SUBCUENTAS ════════════════════════════════════════════════════ -->
+      <div class="page" id="page-sc-ahorro" data-sc="ahorro"></div>
+      <div class="page" id="page-sc-personal" data-sc="personal"></div>
+      <div class="page" id="page-sc-matrimonio" data-sc="matrimonio"></div>
+      <div class="page" id="page-sc-hijos" data-sc="hijos"></div>
+      <div class="page" id="page-sc-deudas" data-sc="deudas"></div>
+
+      <!-- ═══ CATEGORÍAS ════════════════════════════════════════════════════ -->
+      <div class="page" id="page-categorias">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Categorías de ingresos</div></div>
+            <button class="btn btn-primary btn-sm" onclick="abrirNuevaCatIngreso()">＋ Nueva</button>
+          </div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Categoría</th><th>Descripción</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbl-cat-ingreso"></tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Categorías de gastos</div></div>
+            <button class="btn btn-primary btn-sm" onclick="abrirNuevaCatGasto()">＋ Nueva</button>
+          </div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Emoji</th><th>Subcuenta</th><th>Categoría</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbl-cat-gasto"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══ AJUSTES ═══════════════════════════════════════════════════════ -->
+      <div class="page" id="page-ajustes">
+        <div class="card">
+          <div class="card-header"><div class="card-title">⚙️ Configuración financiera</div></div>
+          <div style="max-width:420px">
+            <div class="field">
+              <label>Pensión alimenticia mensual ($)</label>
+              <input type="number" id="cfg-pension" step="0.01" placeholder="1997.00">
+              <div class="field-hint">Se descuenta directamente del ingreso por Sueldo antes de repartir el 25%.</div>
+            </div>
+            <div style="margin-top:16px">
+              <button class="btn btn-primary" onclick="guardarConfig()">Guardar configuración</button>
+            </div>
+            <div class="sep"></div>
+            <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border)">
+              <div style="font-size:13px;font-weight:600;margin-bottom:10px">📐 Regla de distribución</div>
+              <div style="font-size:13px;color:var(--text2);line-height:1.7">
+                <div>• <strong>Sueldo</strong> → se descuenta pensión alimenticia → el resto ÷ 4 entre: Ahorro, Personal, Hijos y Deudas</div>
+                <div>• <strong>Matrimonio</strong> también recibe el 25% del sueldo neto</div>
+                <div>• <strong>Rendimientos</strong> → van íntegramente a Ahorro</div>
+                <div>• <strong>Ganancias Matrimonio</strong> → van íntegramente a Matrimonio</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALES ════════════════════════════════════════════════════════════════ -->
+
+<!-- Ingreso -->
+<div class="overlay" id="ov-ingreso">
+<div class="modal">
+  <div class="modal-title" id="ov-ingreso-titulo">Nuevo ingreso</div>
+  <div class="form-grid">
+    <div class="field"><label>Categoría *</label><select id="ingr-cat"></select></div>
+    <div class="field"><label>Fecha *</label><input type="date" id="ingr-fecha"></div>
+    <div class="field span2"><label>Monto ($) *</label><input type="number" id="ingr-monto" step="0.01" placeholder="0.00"></div>
+    <div class="field span2"><label>Descripción</label><textarea id="ingr-desc" placeholder="Detalle del ingreso..."></textarea></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" onclick="cerrarModal('ov-ingreso')">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarIngreso()">Guardar ingreso</button>
+  </div>
+</div>
+</div>
+
+<!-- Gasto -->
+<div class="overlay" id="ov-gasto">
+<div class="modal">
+  <div class="modal-title" id="ov-gasto-titulo">Nuevo gasto</div>
+  <div class="form-grid">
+    <div class="field"><label>Categoría</label><select id="gasto-cat"></select></div>
+    <div class="field"><label>Fecha *</label><input type="date" id="gasto-fecha"></div>
+    <div class="field span2"><label>Monto ($) *</label><input type="number" id="gasto-monto" step="0.01" placeholder="0.00"></div>
+    <div class="field span2"><label>Descripción</label><textarea id="gasto-desc" placeholder="¿En qué gastaste?"></textarea></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" onclick="cerrarModal('ov-gasto')">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarGasto()">Guardar gasto</button>
+  </div>
+</div>
+</div>
+
+<!-- Categoría ingreso -->
+<div class="overlay" id="ov-cat-ing">
+<div class="modal">
+  <div class="modal-title" id="ov-cat-ing-titulo">Nueva categoría de ingreso</div>
+  <div class="form-grid">
+    <div class="field span2"><label>Nombre *</label><input id="ci-nombre" placeholder="Ej: Freelance"></div>
+    <div class="field span2"><label>Descripción</label><input id="ci-desc" placeholder="Opcional..."></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" onclick="cerrarModal('ov-cat-ing')">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarCatIngreso()">Guardar</button>
+  </div>
+</div>
+</div>
+
+<!-- Categoría gasto -->
+<div class="overlay" id="ov-cat-gas">
+<div class="modal">
+  <div class="modal-title" id="ov-cat-gas-titulo">Nueva categoría de gasto</div>
+  <div class="form-grid">
+    <div class="field"><label>Subcuenta *</label>
+      <select id="cg-subcuenta">
+        <option value="ahorro">💰 Ahorro</option>
+        <option value="personal">👤 Personal</option>
+        <option value="matrimonio">💑 Matrimonio</option>
+        <option value="hijos">👨‍👧‍👦 Hijos</option>
+        <option value="deudas">💳 Deudas</option>
+      </select>
+    </div>
+    <div class="field"><label>Emoji</label><input id="cg-emoji" placeholder="📌" maxlength="4"></div>
+    <div class="field span2"><label>Nombre *</label><input id="cg-nombre" placeholder="Ej: Gimnasio"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" onclick="cerrarModal('ov-cat-gas')">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarCatGasto()">Guardar</button>
+  </div>
+</div>
+</div>
+
+<!-- Confirmar eliminar -->
+<div class="overlay" id="ov-confirm">
+<div class="modal" style="max-width:380px">
+  <div class="modal-title">¿Eliminar registro?</div>
+  <div id="confirm-msg" style="font-size:13px;color:var(--text2);margin-bottom:8px"></div>
+  <div class="modal-footer">
+    <button class="btn" onclick="cerrarModal('ov-confirm')">Cancelar</button>
+    <button class="btn btn-danger" id="confirm-ok">Sí, eliminar</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ ESTADO GLOBAL ═════════════════════════════════════════════════════════════
+let S = {
+  mes: '', anio: '',
+  dashboard: null,
+  ingresos: [], gastos: [],
+  catIngreso: [], catGasto: [],
+  config: {},
+  editIngresoId: null, editGastoId: null,
+  editCatIngId: null, editCatGasId: null,
+  gasoSubcuenta: null,
+  confirmFn: null,
+};
+
+const SC_META = {
+  ahorro:    { label:'Ahorro',     emoji:'💰', color:'var(--ahorro-c)',    page:'sc-ahorro' },
+  personal:  { label:'Personal',   emoji:'👤', color:'var(--personal-c)',  page:'sc-personal' },
+  matrimonio:{ label:'Matrimonio', emoji:'💑', color:'var(--matrimonio-c)',page:'sc-matrimonio' },
+  hijos:     { label:'Hijos',      emoji:'👨‍👧‍👦', color:'var(--hijos-c)',    page:'sc-hijos' },
+  deudas:    { label:'Deudas',     emoji:'💳', color:'var(--deudas-c)',    page:'sc-deudas' },
+};
+
+// ══ TEMA ══════════════════════════════════════════════════════════════════════
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('ff-tema', isDark ? 'dark' : 'light');
+  document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = isDark ? 'Modo claro' : 'Modo oscuro';
+}
+(function(){
+  const s = localStorage.getItem('ff-tema');
+  if (s === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.addEventListener('DOMContentLoaded', () => {
+      if(document.getElementById('theme-icon')) document.getElementById('theme-icon').textContent = '☀️';
+      if(document.getElementById('theme-label')) document.getElementById('theme-label').textContent = 'Modo claro';
+    });
+  }
+})();
+
+// ══ HELPERS ═══════════════════════════════════════════════════════════════════
+const API = async (url, opts={}) => {
+  const r = await fetch(url, {
+    headers:{'Content-Type':'application/json'}, ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || r.statusText); }
+  return r.json();
+};
+const fmtMon = n => '$' + Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtFecha = s => { if(!s) return '—'; const d = new Date(s+'T12:00:00'); return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}); };
+const hoy = () => new Date().toISOString().split('T')[0];
+function toast(msg, tipo='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast show ${tipo}`;
+  setTimeout(() => t.className='toast', 3000);
+}
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+function confirmar(msg, fn) {
+  document.getElementById('confirm-msg').textContent = msg;
+  S.confirmFn = fn;
+  document.getElementById('confirm-ok').onclick = () => { cerrarModal('ov-confirm'); fn(); };
+  abrirModal('ov-confirm');
+}
+
+// ══ MES SELECTOR ══════════════════════════════════════════════════════════════
+function initMesSelector() {
+  const sel = document.getElementById('sel-mes');
+  const now = new Date();
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = `${d.getFullYear()}-${d.getMonth()+1}`;
+    const opt = new Option(`${meses[d.getMonth()]} ${d.getFullYear()}`, val);
+    if (i === 0) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  const [anio, mes] = sel.value.split('-');
+  S.mes = mes; S.anio = anio;
+}
+function cambiarMes() {
+  const val = document.getElementById('sel-mes').value;
+  if (val) { const [a, m] = val.split('-'); S.anio = a; S.mes = m; }
+  else { S.anio = ''; S.mes = ''; }
+  cargarTodo();
+}
+
+// ══ CARGA DE DATOS ════════════════════════════════════════════════════════════
+async function cargarTodo() {
+  const q = S.mes ? `?mes=${S.mes}&anio=${S.anio}` : '';
+  const [dash, ingresos, gastos, catIng, catGas, cfg] = await Promise.all([
+    API(`/api/dashboard${q}`),
+    API(`/api/ingresos${q}`),
+    API(`/api/gastos${q}`),
+    API('/api/categorias-ingreso'),
+    API('/api/categorias-gasto'),
+    API('/api/config'),
+  ]);
+  S.dashboard = dash; S.ingresos = ingresos; S.gastos = gastos;
+  S.catIngreso = catIng; S.catGasto = catGas; S.config = cfg;
+
+  renderDashboard();
+  renderIngresos();
+  renderCategorias();
+  renderAjustes();
+  ['ahorro','personal','matrimonio','hijos','deudas'].forEach(sc => renderSubcuenta(sc));
+}
+
+// ══ DASHBOARD ═════════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const d = S.dashboard;
+  if (!d) return;
+
+  document.getElementById('dash-total-val').textContent = fmtMon(d.totalIngresos);
+
+  // Pills resumen
+  document.getElementById('dash-pills').innerHTML = `
+    <div class="pill"><span class="pill-dot" style="background:var(--green)"></span>Ingresado: ${fmtMon(d.totalIngresos)}</div>
+    <div class="pill"><span class="pill-dot" style="background:var(--red)"></span>Gastado: ${fmtMon(d.totalGastado)}</div>
+    <div class="pill"><span class="pill-dot" style="background:var(--gold)"></span>Pensión: ${fmtMon(d.pension)}</div>
+    <div class="pill"><span class="pill-dot" style="background:var(--blue)"></span>Base reparto: ${fmtMon(d.baseReparticion)}</div>
+  `;
+
+  // Subcuentas grid
+  const grid = document.getElementById('subcuentas-grid');
+  grid.innerHTML = Object.entries(SC_META).map(([key, meta]) => {
+    const asig = d.asignado[key] || 0;
+    const gast = d.gastado[key] || 0;
+    const saldo = d.saldo[key] || 0;
+    const pct = asig > 0 ? Math.min(100, (gast / asig) * 100) : 0;
+    const saldoColor = saldo >= 0 ? 'var(--green)' : 'var(--red)';
+    return `<div class="sc-card ${key}" data-emoji="${meta.emoji}" onclick="navegarA('sc-${key}')">
+      <div class="sc-label ${key}">${meta.emoji} ${meta.label}</div>
+      <div class="sc-saldo" style="color:${saldoColor}">${fmtMon(saldo)}</div>
+      <div class="sc-detail">Asignado: ${fmtMon(asig)} · Gastado: ${fmtMon(gast)}</div>
+      <div class="sc-bar"><div class="sc-fill ${key}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  // Distribución
+  const dist = document.getElementById('dist-body');
+  const rows = [
+    { icon:'💼', label:'Sueldo bruto', sub:'', val: fmtMon(d.totalSueldo), badge:'' },
+    { icon:'➖', label:'Pensión alimenticia', sub:'Se descuenta del sueldo', val: `- ${fmtMon(d.pension)}`, badge:'badge-red', badgeTxt:'Descuento' },
+    { icon:'📊', label:'Sueldo neto + otros', sub:'Base para el reparto 25%', val: fmtMon(d.baseReparticion), badge:'badge-blue', badgeTxt:'Base' },
+    { icon:'💰', label:'Ahorro (25% + Rendimientos)', sub:`25% = ${fmtMon(d.baseReparticion*.25)} + Rendim. ${fmtMon(d.totalRendimientos)}`, val: fmtMon(d.asignado.ahorro), badge:'badge-green', badgeTxt:'+Rendim.' },
+    { icon:'👤', label:'Personal (25%)', sub:'', val: fmtMon(d.asignado.personal), badge:'' },
+    { icon:'💑', label:'Matrimonio (25% + Ganancias)', sub:`25% = ${fmtMon(d.baseReparticion*.25)} + Matr. ${fmtMon(d.totalMatrimonio)}`, val: fmtMon(d.asignado.matrimonio), badge:'badge-gold', badgeTxt:'+Gananc.' },
+    { icon:'👨‍👧‍👦', label:'Hijos (25%)', sub:'', val: fmtMon(d.asignado.hijos), badge:'' },
+    { icon:'💳', label:'Deudas (25%)', sub:'', val: fmtMon(d.asignado.deudas), badge:'' },
+  ];
+  dist.innerHTML = rows.map(r => `
+    <div class="dist-row">
+      <div class="dist-icon">${r.icon}</div>
+      <div style="flex:1"><div class="dist-label">${r.label}${r.badge ? `<span class="dist-badge ${r.badge}">${r.badgeTxt}</span>` : ''}</div>${r.sub ? `<div class="dist-sub">${r.sub}</div>` : ''}</div>
+      <div class="dist-val">${r.val}</div>
+    </div>`).join('');
+}
+
+// ══ INGRESOS ══════════════════════════════════════════════════════════════════
+function renderIngresos() {
+  const tb = document.getElementById('tbl-ingresos');
+  if (!S.ingresos.length) { tb.innerHTML = '<tr><td colspan="6" class="empty"><div class="empty-icon">📥</div><div>Sin ingresos en este periodo</div></td></tr>'; return; }
+  tb.innerHTML = S.ingresos.map(i => `<tr>
+    <td>${fmtFecha(i.fecha)}</td>
+    <td><span class="tag ingreso-badge">${i.categoria_nombre || '—'}</span></td>
+    <td style="color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.descripcion || '—'}</td>
+    <td class="td-mono" style="color:var(--green);font-weight:600">${fmtMon(i.monto)}</td>
+    <td style="font-size:11px;color:var(--text2)">${distribucionIngreso(i)}</td>
+    <td><div class="btns btns-end">
+      <button class="btn btn-sm" onclick="editarIngreso(${i.id})">✏️</button>
+      <button class="btn btn-sm btn-danger" onclick="eliminarIngreso(${i.id})">🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function distribucionIngreso(i) {
+  const cat = i.categoria_nombre;
+  if (cat === 'Rendimientos') return '→ Ahorro 100%';
+  if (cat === 'Ganancias Matrimonio') return '→ Matrimonio 100%';
+  if (cat === 'Sueldo') return '→ -Pensión → 25% x5';
+  return '→ 25% x5';
+}
+
+function abrirNuevoIngreso() {
+  S.editIngresoId = null;
+  document.getElementById('ov-ingreso-titulo').textContent = 'Nuevo ingreso';
+  document.getElementById('ingr-cat').innerHTML = S.catIngreso.filter(c=>c.activa).map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+  document.getElementById('ingr-fecha').value = hoy();
+  document.getElementById('ingr-monto').value = '';
+  document.getElementById('ingr-desc').value = '';
+  abrirModal('ov-ingreso');
+}
+
+function editarIngreso(id) {
+  const i = S.ingresos.find(x => x.id === id);
+  S.editIngresoId = id;
+  document.getElementById('ov-ingreso-titulo').textContent = 'Editar ingreso';
+  document.getElementById('ingr-cat').innerHTML = S.catIngreso.filter(c=>c.activa).map(c => `<option value="${c.id}" ${c.id===i.categoria_id?'selected':''}>${c.nombre}</option>`).join('');
+  document.getElementById('ingr-fecha').value = i.fecha?.split('T')[0] || hoy();
+  document.getElementById('ingr-monto').value = i.monto;
+  document.getElementById('ingr-desc').value = i.descripcion || '';
+  abrirModal('ov-ingreso');
+}
+
+async function guardarIngreso() {
+  const body = {
+    categoria_id: document.getElementById('ingr-cat').value,
+    monto: parseFloat(document.getElementById('ingr-monto').value),
+    fecha: document.getElementById('ingr-fecha').value,
+    descripcion: document.getElementById('ingr-desc').value.trim(),
+  };
+  if (!body.monto || isNaN(body.monto)) { toast('El monto es requerido','error'); return; }
+  try {
+    if (S.editIngresoId) { await API(`/api/ingresos/${S.editIngresoId}`, {method:'PUT',body}); toast('Ingreso actualizado'); }
+    else { await API('/api/ingresos', {method:'POST',body}); toast('Ingreso registrado'); }
+    cerrarModal('ov-ingreso');
+    await cargarTodo();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function eliminarIngreso(id) {
+  confirmar('¿Eliminar este ingreso? Esta acción no se puede deshacer.', async () => {
+    try { await API(`/api/ingresos/${id}`,{method:'DELETE'}); toast('Ingreso eliminado'); await cargarTodo(); }
+    catch(e) { toast(e.message,'error'); }
+  });
+}
+
+// ══ SUBCUENTAS ════════════════════════════════════════════════════════════════
+function renderSubcuenta(sc) {
+  const meta = SC_META[sc];
+  const d = S.dashboard;
+  const asig = d?.asignado[sc] || 0;
+  const gast = d?.gastado[sc] || 0;
+  const saldo = d?.saldo[sc] || 0;
+  const gastosLocal = S.gastos.filter(g => g.subcuenta === sc);
+  const catLocal = S.catGasto.filter(c => c.subcuenta === sc && c.activa);
+
+  // Gráfico
+  const porCat = {};
+  gastosLocal.forEach(g => {
+    const k = g.categoria_nombre || 'Sin categoría';
+    const emoji = g.emoji || '📌';
+    if (!porCat[k]) porCat[k] = { total: 0, emoji };
+    porCat[k].total += parseFloat(g.monto);
+  });
+  const porCatArr = Object.entries(porCat).sort((a,b) => b[1].total - a[1].total);
+  const maxVal = porCatArr[0]?.[1].total || 1;
+
+  const saldoColor = saldo >= 0 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById(`page-sc-${sc}`).innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+      <div class="card" style="margin-bottom:0;background:var(--${sc}-bg);border-color:var(--${sc}-c)22">
+        <div class="sc-label ${sc}" style="font-size:10px;margin-bottom:6px">${meta.emoji} ${meta.label}</div>
+        <div style="font-size:26px;font-weight:700;color:${saldoColor}">${fmtMon(saldo)}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">Saldo disponible</div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px">📥 ASIGNADO</div>
+        <div style="font-size:22px;font-weight:700">${fmtMon(asig)}</div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px">📤 GASTADO</div>
+        <div style="font-size:22px;font-weight:700;color:var(--red)">${fmtMon(gast)}</div>
+      </div>
+    </div>
+
+    ${porCatArr.length > 0 ? `<div class="card">
+      <div class="card-header" style="margin-bottom:16px"><div class="card-title">📊 Gastos por categoría</div></div>
+      <div class="chart-container">
+        ${porCatArr.map(([nombre, info]) => {
+          const pct = (info.total / maxVal * 100).toFixed(1);
+          return `<div class="chart-row">
+            <div class="chart-label">${info.emoji} ${nombre}</div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar" style="width:${pct}%;background:var(--${sc}-c)cc">
+                <span class="chart-bar-label">${pct}%</span>
+              </div>
+            </div>
+            <div class="chart-val">${fmtMon(info.total)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Movimientos</div></div>
+        <button class="btn btn-primary btn-sm" onclick="abrirNuevoGasto('${sc}')">＋ Nuevo gasto</button>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Monto</th><th></th></tr></thead>
+        <tbody>
+          ${gastosLocal.length === 0
+            ? `<tr><td colspan="5" class="empty"><div class="empty-icon">${meta.emoji}</div><div>Sin gastos en este periodo</div></td></tr>`
+            : gastosLocal.map(g => `<tr>
+              <td>${fmtFecha(g.fecha)}</td>
+              <td><span class="tag" style="background:var(--${g.subcuenta}-bg);color:var(--${g.subcuenta}-c)">${g.emoji||'📌'} ${g.categoria_nombre||'Sin cat.'}</span></td>
+              <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.descripcion||'—'}</td>
+              <td class="td-mono" style="color:var(--red);font-weight:600">${fmtMon(g.monto)}</td>
+              <td><div class="btns btns-end">
+                <button class="btn btn-sm" onclick="editarGasto(${g.id})">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarGasto(${g.id})">🗑</button>
+              </div></td>
+            </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+function abrirNuevoGasto(sc) {
+  S.editGastoId = null;
+  S.gasoSubcuenta = sc;
+  document.getElementById('ov-gasto-titulo').textContent = `Nuevo gasto — ${SC_META[sc].emoji} ${SC_META[sc].label}`;
+  const cats = S.catGasto.filter(c => c.subcuenta === sc && c.activa);
+  document.getElementById('gasto-cat').innerHTML = `<option value="">Sin categoría</option>` + cats.map(c => `<option value="${c.id}">${c.emoji} ${c.nombre}</option>`).join('');
+  document.getElementById('gasto-fecha').value = hoy();
+  document.getElementById('gasto-monto').value = '';
+  document.getElementById('gasto-desc').value = '';
+  abrirModal('ov-gasto');
+}
+
+function editarGasto(id) {
+  const g = S.gastos.find(x => x.id === id);
+  S.editGastoId = id;
+  S.gasoSubcuenta = g.subcuenta;
+  document.getElementById('ov-gasto-titulo').textContent = `Editar gasto — ${SC_META[g.subcuenta].emoji} ${SC_META[g.subcuenta].label}`;
+  const cats = S.catGasto.filter(c => c.subcuenta === g.subcuenta && c.activa);
+  document.getElementById('gasto-cat').innerHTML = `<option value="">Sin categoría</option>` + cats.map(c => `<option value="${c.id}" ${c.id===g.categoria_id?'selected':''}>${c.emoji} ${c.nombre}</option>`).join('');
+  document.getElementById('gasto-fecha').value = g.fecha?.split('T')[0] || hoy();
+  document.getElementById('gasto-monto').value = g.monto;
+  document.getElementById('gasto-desc').value = g.descripcion || '';
+  abrirModal('ov-gasto');
+}
+
+async function guardarGasto() {
+  const body = {
+    subcuenta: S.gasoSubcuenta,
+    categoria_id: document.getElementById('gasto-cat').value || null,
+    monto: parseFloat(document.getElementById('gasto-monto').value),
+    fecha: document.getElementById('gasto-fecha').value,
+    descripcion: document.getElementById('gasto-desc').value.trim(),
+  };
+  if (!body.monto || isNaN(body.monto)) { toast('El monto es requerido','error'); return; }
+  try {
+    if (S.editGastoId) { await API(`/api/gastos/${S.editGastoId}`,{method:'PUT',body}); toast('Gasto actualizado'); }
+    else { await API('/api/gastos',{method:'POST',body}); toast('Gasto registrado'); }
+    cerrarModal('ov-gasto');
+    await cargarTodo();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function eliminarGasto(id) {
+  confirmar('¿Eliminar este gasto?', async () => {
+    try { await API(`/api/gastos/${id}`,{method:'DELETE'}); toast('Gasto eliminado'); await cargarTodo(); }
+    catch(e) { toast(e.message,'error'); }
+  });
+}
+
+// ══ CATEGORÍAS ════════════════════════════════════════════════════════════════
+function renderCategorias() {
+  // Ingresos
+  const tci = document.getElementById('tbl-cat-ingreso');
+  tci.innerHTML = S.catIngreso.map(c => `<tr>
+    <td style="font-weight:500">${c.nombre}</td>
+    <td style="color:var(--text2);font-size:12px">${c.descripcion||'—'}</td>
+    <td><span class="tag ${c.activa?'ingreso-badge':'gasto-badge'}">${c.activa?'Activa':'Inactiva'}</span></td>
+    <td><div class="btns btns-end">
+      <button class="btn btn-sm" onclick="editarCatIngreso(${c.id})">✏️</button>
+      <button class="btn btn-sm btn-danger" onclick="eliminarCatIngreso(${c.id})">🗑</button>
+    </div></td>
+  </tr>`).join('') || '<tr><td colspan="4" class="empty">Sin categorías</td></tr>';
+
+  // Gastos
+  const tcg = document.getElementById('tbl-cat-gasto');
+  tcg.innerHTML = S.catGasto.map(c => `<tr>
+    <td class="td-emoji">${c.emoji}</td>
+    <td><span class="tag" style="background:var(--${c.subcuenta}-bg);color:var(--${c.subcuenta}-c)">${SC_META[c.subcuenta]?.label||c.subcuenta}</span></td>
+    <td style="font-weight:500">${c.nombre}</td>
+    <td><span class="tag ${c.activa?'ingreso-badge':'gasto-badge'}">${c.activa?'Activa':'Inactiva'}</span></td>
+    <td><div class="btns btns-end">
+      <button class="btn btn-sm" onclick="editarCatGasto(${c.id})">✏️</button>
+      <button class="btn btn-sm btn-danger" onclick="eliminarCatGasto(${c.id})">🗑</button>
+    </div></td>
+  </tr>`).join('') || '<tr><td colspan="5" class="empty">Sin categorías</td></tr>';
+}
+
+function abrirNuevaCatIngreso() {
+  S.editCatIngId = null;
+  document.getElementById('ov-cat-ing-titulo').textContent = 'Nueva categoría de ingreso';
+  document.getElementById('ci-nombre').value = '';
+  document.getElementById('ci-desc').value = '';
+  abrirModal('ov-cat-ing');
+}
+function editarCatIngreso(id) {
+  const c = S.catIngreso.find(x=>x.id===id);
+  S.editCatIngId = id;
+  document.getElementById('ov-cat-ing-titulo').textContent = 'Editar categoría';
+  document.getElementById('ci-nombre').value = c.nombre;
+  document.getElementById('ci-desc').value = c.descripcion||'';
+  abrirModal('ov-cat-ing');
+}
+async function guardarCatIngreso() {
+  const body = { nombre:document.getElementById('ci-nombre').value.trim(), descripcion:document.getElementById('ci-desc').value.trim(), activa:true };
+  if (!body.nombre) { toast('Nombre requerido','error'); return; }
+  try {
+    if (S.editCatIngId) { await API(`/api/categorias-ingreso/${S.editCatIngId}`,{method:'PUT',body}); toast('Categoría actualizada'); }
+    else { await API('/api/categorias-ingreso',{method:'POST',body}); toast('Categoría creada'); }
+    cerrarModal('ov-cat-ing'); await cargarTodo();
+  } catch(e) { toast(e.message,'error'); }
+}
+function eliminarCatIngreso(id) {
+  confirmar('¿Eliminar esta categoría de ingreso?', async () => {
+    try { await API(`/api/categorias-ingreso/${id}`,{method:'DELETE'}); toast('Eliminada'); await cargarTodo(); }
+    catch(e) { toast(e.message,'error'); }
+  });
+}
+
+function abrirNuevaCatGasto() {
+  S.editCatGasId = null;
+  document.getElementById('ov-cat-gas-titulo').textContent = 'Nueva categoría de gasto';
+  document.getElementById('cg-nombre').value = '';
+  document.getElementById('cg-emoji').value = '';
+  document.getElementById('cg-subcuenta').value = 'ahorro';
+  abrirModal('ov-cat-gas');
+}
+function editarCatGasto(id) {
+  const c = S.catGasto.find(x=>x.id===id);
+  S.editCatGasId = id;
+  document.getElementById('ov-cat-gas-titulo').textContent = 'Editar categoría';
+  document.getElementById('cg-nombre').value = c.nombre;
+  document.getElementById('cg-emoji').value = c.emoji||'';
+  document.getElementById('cg-subcuenta').value = c.subcuenta;
+  abrirModal('ov-cat-gas');
+}
+async function guardarCatGasto() {
+  const body = { subcuenta:document.getElementById('cg-subcuenta').value, nombre:document.getElementById('cg-nombre').value.trim(), emoji:document.getElementById('cg-emoji').value.trim()||'📌', activa:true };
+  if (!body.nombre) { toast('Nombre requerido','error'); return; }
+  try {
+    if (S.editCatGasId) { await API(`/api/categorias-gasto/${S.editCatGasId}`,{method:'PUT',body}); toast('Categoría actualizada'); }
+    else { await API('/api/categorias-gasto',{method:'POST',body}); toast('Categoría creada'); }
+    cerrarModal('ov-cat-gas'); await cargarTodo();
+  } catch(e) { toast(e.message,'error'); }
+}
+function eliminarCatGasto(id) {
+  confirmar('¿Eliminar esta categoría de gasto?', async () => {
+    try { await API(`/api/categorias-gasto/${id}`,{method:'DELETE'}); toast('Eliminada'); await cargarTodo(); }
+    catch(e) { toast(e.message,'error'); }
+  });
+}
+
+// ══ AJUSTES ═══════════════════════════════════════════════════════════════════
+function renderAjustes() {
+  document.getElementById('cfg-pension').value = S.config.pension_alimenticia || 1997;
+}
+async function guardarConfig() {
+  const pension = parseFloat(document.getElementById('cfg-pension').value);
+  if (isNaN(pension) || pension < 0) { toast('Monto inválido','error'); return; }
+  try {
+    await API('/api/config/pension_alimenticia',{method:'PUT',body:{valor:String(pension)}});
+    toast('Configuración guardada ✓');
+    await cargarTodo();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══ NAVEGACIÓN ════════════════════════════════════════════════════════════════
+const TOPBAR_NAMES = {
+  dashboard:'Dashboard', ingresos:'Ingresos',
+  'sc-ahorro':'💰 Ahorro', 'sc-personal':'👤 Personal',
+  'sc-matrimonio':'💑 Matrimonio', 'sc-hijos':'👨‍👧‍👦 Hijos', 'sc-deudas':'💳 Deudas',
+  categorias:'🏷️ Categorías', ajustes:'⚙️ Ajustes',
+};
+const TOPBAR_SUBS = {
+  dashboard:'Resumen general de tus finanzas', ingresos:'Historial de ingresos',
+  'sc-ahorro':'Movimientos y análisis de Ahorro',
+  'sc-personal':'Movimientos y análisis de Personal',
+  'sc-matrimonio':'Movimientos y análisis de Matrimonio',
+  'sc-hijos':'Movimientos y análisis de Hijos',
+  'sc-deudas':'Movimientos y análisis de Deudas',
+  categorias:'Gestión de categorías', ajustes:'Configuración del sistema',
+};
+
+function navegarA(pageName) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${pageName}`).classList.add('active');
+  document.querySelectorAll('.sb-btn').forEach(b => b.classList.toggle('active', b.dataset.page === pageName));
+  document.getElementById('topbar-title').textContent = TOPBAR_NAMES[pageName] || pageName;
+  document.getElementById('topbar-sub').textContent = TOPBAR_SUBS[pageName] || '';
+}
+document.querySelectorAll('.sb-btn[data-page]').forEach(btn => {
+  btn.addEventListener('click', () => navegarA(btn.dataset.page));
+});
+
+// ══ SPLASH & ARRANQUE ═════════════════════════════════════════════════════════
+window.addEventListener('load', async () => {
+  initMesSelector();
+  try { await cargarTodo(); } catch(e) { console.error('Error al cargar:', e); }
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    const app = document.getElementById('app');
+    if(splash) { splash.classList.add('out'); setTimeout(()=>splash.style.display='none', 600); }
+    if(app) app.classList.add('visible');
+  }, 1800);
+});
+</script>
+</body>
+</html>
